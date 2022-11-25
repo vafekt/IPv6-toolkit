@@ -1,6 +1,5 @@
 #!/usr/bin/python
 import sys
-
 from scapy.layers.inet6 import ICMPv6EchoRequest, IPv6
 from scapy.sendrecv import send
 
