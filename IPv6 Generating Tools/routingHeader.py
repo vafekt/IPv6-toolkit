@@ -11,7 +11,7 @@ if len(sys.argv) == 4:
     hop = sys.argv[3]
 else:
     print("Please insert:\n 1. Source IPv6 address\n 2. Destination IPv6 address"
-          "\n 3. Intermediate hops")
+          "\n 3. Intermediate hops, separated by comma without space")
     sys.exit(1)
 
 hop = hop.split(",")
