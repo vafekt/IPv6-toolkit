@@ -218,11 +218,11 @@ def generate(interface, source_mac, source_ip, destination_ip, list_rtype, list_
                 HBH = IPv6ExtHdrHopByHop(options=RouterAlert(otype=5, optlen=2, value=0))
 
                 list_mar = []
-                for j in range(10):
+                for j in range(20):
                     M = 16 ** 4
                     mip = "ff0d::" + ":".join(("%x" % random.randint(0, M) for k in range(2)))
                     list_src = []
-                    for l in range(5):
+                    for l in range(1):
                         src = "2001:dead:" + ":".join(("%x" % random.randint(0, M) for m in range(6)))
                         list_src.append(src)
                     MAR = ICMPv6MLDMultAddrRec(rtype=random.randint(1, 6), dst=mip, sources=list_src)
@@ -238,7 +238,7 @@ def generate(interface, source_mac, source_ip, destination_ip, list_rtype, list_
                 pass
 
         threads = []
-        for i in range(5):
+        for i in range(4):
             thread = threading.Thread(target=send_packets, args=(pkt_list, interface))
             threads.append(thread)
             thread.start()
