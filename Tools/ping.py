@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 import argparse
 import logging
 import multiprocessing
@@ -12,7 +12,7 @@ import psutil
 from scapy.arch import get_if_hwaddr
 from scapy.config import conf
 from scapy.layers.inet6 import ICMPv6EchoRequest, IPv6, fragment6, ICMPv6EchoReply, ICMPv6ParamProblem, \
-    ICMPv6DestUnreach, ICMPv6TimeExceeded, ICMPv6PacketTooBig
+    ICMPv6DestUnreach, ICMPv6TimeExceeded, ICMPv6PacketTooBig, IPv6ExtHdrFragment, ICMPv6ND_NA, ICMPv6ND_NS
 from scapy.layers.l2 import Ether
 from scapy.sendrecv import sendp, sendpfast, sndrcvflood, srpflood, sniff
 from scapy.supersocket import SuperSocket
@@ -154,7 +154,7 @@ def generate(interface, source_mac, source_ip, destination_ip, hop_lim, num_pack
 
     if flood is not None:  # Flooding the target
         pkt_list = []
-        print("Flooding the destination: " + destination_ip + "with PING messages (press Ctrl+C to stop the "
+        print("Flooding the destination: " + destination_ip + " with PING messages (press Ctrl+C to stop the "
                                                               "attack).....")
         if flood == "constant":
             for i in range(150):
@@ -199,10 +199,11 @@ def sniffing(interface, source_ip, destination_ip):
 
     def custom_action(packet):
         # Create tuple of Src/Dst in sorted order
-        if packet[0][1].src not in ip_list:
-            if ICMPv6EchoReply in packet:
-                print("===> Received Echo Reply from: " + packet[0][1].src + " with MAC: " + packet[0].src)
-                ip_list.append(packet[0][1].src)
+        if ICMPv6ND_NA not in packet or ICMPv6ND_NS not in packet:
+            if ICMPv6EchoReply or IPv6ExtHdrFragment in packet:
+                if packet[0][1].src == destination_ip:
+                    print("===> Received Echo Reply from: " + packet[0][1].src + " with MAC: " + packet[0].src)
+                    ip_list.append(packet[0][1].src)
             if ICMPv6ParamProblem in packet:
                 print("===> Received Parameter Problem from: " + packet[0][1].src + " with MAC: " + packet[0].src)
                 print("     with error: " + convert_paramProblem(packet[ICMPv6ParamProblem].code))
