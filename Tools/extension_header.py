@@ -47,7 +47,7 @@ def parameter():
                     "Headers, type -hdr \"hbh:x\". To insert x Destination Headers, type -hdr \"des:x\". To insert x "
                     "Fragment Headers, type -hdr \"fra:x\". To insert x Routing Headers, type -hdr \"rou:x\". The "
                     "order of Extension Headers follows the the way of inserting parameters. For example, "
-                    "-hdr \"rou:5\" \"des:5\" \"frag:5\" \"des:5\" \"hbh:5\". Option to flood "
+                    "-hdr \"rou:5\" \"des:5\" \"fra:5\" \"des:5\" \"hbh:5\". Option to flood "
                     "is also included.")
     parser.add_argument("interface", nargs="?", help="the network interface to use from the sender.")
     parser.add_argument("-type", dest="type", choices=["TCP", "UDP", "ICMPv6"], action="store", default="ICMPv6",
