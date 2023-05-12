@@ -9,7 +9,8 @@ from netaddr import IPNetwork
 from scapy.arch import get_if_hwaddr
 from scapy.layers.dhcp6 import DHCP6_Solicit, DHCP6_Advertise, DHCP6OptClientId, DHCP6OptServerId, DUID_LLT, \
     DHCP6OptDNSServers, DHCP6OptIA_NA, DHCP6OptIAAddress, DHCP6_Request, DHCP6_Reply, DHCP6OptDNSDomains, DHCP6_Confirm, \
-    DHCP6_Renew, DHCP6_Rebind, DUID_LL, DUID_UUID, DHCP6OptIA_TA, DHCP6OptPref, DHCP6OptServerUnicast, DHCP6OptOptReq
+    DHCP6_Renew, DHCP6_Rebind, DUID_LL, DUID_UUID, DHCP6OptIA_TA, DHCP6OptPref, DHCP6OptServerUnicast, DHCP6OptOptReq, \
+    DHCP6_InfoRequest, DHCP6_Release
 from scapy.layers.inet import UDP
 from scapy.layers.inet6 import IPv6
 from scapy.layers.l2 import Ether
@@ -78,7 +79,7 @@ def main():
             print("---> The given valid lifetime of prefix is invalid. Try again!!!")
             flag = True
 
-    # Validate the prefered lifetime of prefix
+    # Validate the preferred lifetime of prefix
     if args.prefered_lftime is not None:
         if not is_valid_num(args.prefered_lftime):
             print("---> The given preferred lifetime of prefix is invalid. Try again!!!")
@@ -189,6 +190,7 @@ def sniff_DHCP(interface, source_ip, source_mac, prefix_info, type_add, ia, vali
         if DHCP6_Request in packet:
             dhcp_reply = DHCP6_Reply(trid=packet[0][DHCP6_Request].trid)
             client_id = DHCP6OptClientId(duid=packet[0][DHCP6OptClientId][1])
+
             if duid == "LLT":
                 server_ID = DHCP6OptServerId(duid=DUID_LLT(lladdr=source_mac))
             if duid == "LL":
@@ -206,11 +208,11 @@ def sniff_DHCP(interface, source_ip, source_mac, prefix_info, type_add, ia, vali
                 ia_ta = DHCP6OptIA_TA(iaid=packet[0][DHCP6OptIA_TA].iaid, iataopts=packet[0][DHCP6OptIA_TA].ianaopts)
                 packet1 /= ia_ta
 
-            if 23 in packet[0][DHCP6OptOptReq].reqopts:
+            if 23 in packet[0][DHCP6OptOptReq].reqopts and dns is not None:
                 dns_server = DHCP6OptDNSServers(dnsservers=[dns])
                 packet1 /= dns_server
 
-            if 24 in packet[0][DHCP6OptOptReq].reqopts:
+            if 24 in packet[0][DHCP6OptOptReq].reqopts and dns_domain is not None:
                 domain = DHCP6OptDNSDomains(dnsdomains=[dns_domain])
                 packet1 /= domain
 
@@ -222,9 +224,9 @@ def sniff_DHCP(interface, source_ip, source_mac, prefix_info, type_add, ia, vali
                 print("         with confirmed address: " + packet1[0][DHCP6OptIAAddress].addr)
                 print("            with valid lifetime: " + str(packet1[0][DHCP6OptIAAddress].validlft))
                 print("        with preferred lifetime: " + str(packet1[0][DHCP6OptIAAddress].preflft))
-            if 23 in packet[0][DHCP6OptOptReq].reqopts:
-                print("                    DNS address: " + dns)
-            if 24 in packet[0][DHCP6OptOptReq].reqopts:
+            if 23 in packet[0][DHCP6OptOptReq].reqopts and dns is not None:
+                print("                    DNS address: " + str(dns))
+            if 24 in packet[0][DHCP6OptOptReq].reqopts and dns_domain is not None:
                 print("                     DNS domain: " + str(dns_domain))
             print("-------------------------------------------------------------")
 
@@ -248,11 +250,11 @@ def sniff_DHCP(interface, source_ip, source_mac, prefix_info, type_add, ia, vali
                 ia_ta = DHCP6OptIA_TA(iaid=packet[0][DHCP6OptIA_TA].iaid, iataopts=packet[0][DHCP6OptIA_TA].ianaopts)
                 packet1 /= ia_ta
 
-            if 23 in packet[0][DHCP6OptOptReq].reqopts:
+            if 23 in packet[0][DHCP6OptOptReq].reqopts and dns is not None:
                 dns_server = DHCP6OptDNSServers(dnsservers=[dns])
                 packet1 /= dns_server
 
-            if 24 in packet[0][DHCP6OptOptReq].reqopts:
+            if 24 in packet[0][DHCP6OptOptReq].reqopts and dns_domain is not None:
                 domain = DHCP6OptDNSDomains(dnsdomains=[dns_domain])
                 packet1 /= domain
 
@@ -264,9 +266,9 @@ def sniff_DHCP(interface, source_ip, source_mac, prefix_info, type_add, ia, vali
                 print("         with confirmed address: " + packet1[0][DHCP6OptIAAddress].addr)
                 print("            with valid lifetime: " + str(packet1[0][DHCP6OptIAAddress].validlft))
                 print("        with preferred lifetime: " + str(packet1[0][DHCP6OptIAAddress].preflft))
-            if 23 in packet[0][DHCP6OptOptReq].reqopts:
-                print("                    DNS address: " + dns)
-            if 24 in packet[0][DHCP6OptOptReq].reqopts:
+            if 23 in packet[0][DHCP6OptOptReq].reqopts and dns is not None:
+                print("                    DNS address: " + str(dns))
+            if 24 in packet[0][DHCP6OptOptReq].reqopts and dns_domain is not None:
                 print("                     DNS domain: " + str(dns_domain))
             print("-------------------------------------------------------------")
 
@@ -290,25 +292,25 @@ def sniff_DHCP(interface, source_ip, source_mac, prefix_info, type_add, ia, vali
                 ia_ta = DHCP6OptIA_TA(iaid=packet[0][DHCP6OptIA_TA].iaid, iataopts=packet[0][DHCP6OptIA_TA].ianaopts)
                 packet1 /= ia_ta
 
-            if 23 in packet[0][DHCP6OptOptReq].reqopts:
+            if 23 in packet[0][DHCP6OptOptReq].reqopts and dns is not None:
                 dns_server = DHCP6OptDNSServers(dnsservers=[dns])
                 packet1 /= dns_server
 
-            if 24 in packet[0][DHCP6OptOptReq].reqopts:
+            if 24 in packet[0][DHCP6OptOptReq].reqopts and dns_domain is not None:
                 domain = DHCP6OptDNSDomains(dnsdomains=[dns_domain])
                 packet1 /= domain
 
             sendp(packet1, verbose=False, iface=interface)
 
-            print("+ Received REQUEST message from host: " + packet[0][1].src + " and MAC: " + packet[0].src)
+            print("+ Received RENEW message from host: " + packet[0][1].src + " and MAC: " + packet[0].src)
             print("+ Sending REPLY message to host: " + packet[0][1].src)
             if prefix_info is not None:
                 print("         with confirmed address: " + packet1[0][DHCP6OptIAAddress].addr)
                 print("            with valid lifetime: " + str(packet1[0][DHCP6OptIAAddress].validlft))
                 print("        with preferred lifetime: " + str(packet1[0][DHCP6OptIAAddress].preflft))
-            if 23 in packet[0][DHCP6OptOptReq].reqopts:
-                print("                    DNS address: " + dns)
-            if 24 in packet[0][DHCP6OptOptReq].reqopts:
+            if 23 in packet[0][DHCP6OptOptReq].reqopts and dns is not None:
+                print("                    DNS address: " + str(dns))
+            if 24 in packet[0][DHCP6OptOptReq].reqopts and dns_domain is not None:
                 print("                     DNS domain: " + str(dns_domain))
             print("-------------------------------------------------------------")
 
@@ -332,25 +334,111 @@ def sniff_DHCP(interface, source_ip, source_mac, prefix_info, type_add, ia, vali
                 ia_ta = DHCP6OptIA_TA(iaid=packet[0][DHCP6OptIA_TA].iaid, iataopts=packet[0][DHCP6OptIA_TA].ianaopts)
                 packet1 /= ia_ta
 
-            if 23 in packet[0][DHCP6OptOptReq].reqopts:
+            if 23 in packet[0][DHCP6OptOptReq].reqopts and dns is not None:
                 dns_server = DHCP6OptDNSServers(dnsservers=[dns])
                 packet1 /= dns_server
 
-            if 24 in packet[0][DHCP6OptOptReq].reqopts:
+            if 24 in packet[0][DHCP6OptOptReq].reqopts and dns_domain is not None:
                 domain = DHCP6OptDNSDomains(dnsdomains=[dns_domain])
                 packet1 /= domain
 
             sendp(packet1, verbose=False, iface=interface)
 
-            print("+ Received REQUEST message from host: " + packet[0][1].src + " and MAC: " + packet[0].src)
+            print("+ Received REBIND message from host: " + packet[0][1].src + " and MAC: " + packet[0].src)
             print("+ Sending REPLY message to host: " + packet[0][1].src)
             if prefix_info is not None:
                 print("         with confirmed address: " + packet1[0][DHCP6OptIAAddress].addr)
                 print("            with valid lifetime: " + str(packet1[0][DHCP6OptIAAddress].validlft))
                 print("        with preferred lifetime: " + str(packet1[0][DHCP6OptIAAddress].preflft))
-            if 23 in packet[0][DHCP6OptOptReq].reqopts:
-                print("                    DNS address: " + dns)
-            if 24 in packet[0][DHCP6OptOptReq].reqopts:
+            if 23 in packet[0][DHCP6OptOptReq].reqopts and dns is not None:
+                print("                    DNS address: " + str(dns))
+            if 24 in packet[0][DHCP6OptOptReq].reqopts and dns_domain is not None:
+                print("                     DNS domain: " + str(dns_domain))
+            print("-------------------------------------------------------------")
+
+        if DHCP6_InfoRequest in packet:
+            dhcp_reply = DHCP6_Reply(trid=packet[0][DHCP6_InfoRequest].trid)
+            client_id = DHCP6OptClientId(duid=packet[0][DHCP6OptClientId][1])
+            if duid == "LLT":
+                server_ID = DHCP6OptServerId(duid=DUID_LLT(lladdr=source_mac))
+            if duid == "LL":
+                server_ID = DHCP6OptServerId(duid=DUID_LL(lladdr=source_mac))
+            if duid == "UUID":
+                server_ID = DHCP6OptServerId(duid=DUID_UUID(uuid=uuid.uuid1()))
+
+            packet1 = layer2 / layer3 / layer4 / dhcp_reply / client_id / server_ID
+            if DHCP6OptIA_NA in packet:
+                ia_na = DHCP6OptIA_NA(iaid=packet[0][DHCP6OptIA_NA].iaid, T1=packet[0][DHCP6OptIA_NA].T1,
+                                      T2=packet[0][DHCP6OptIA_NA].T2, ianaopts=packet[0][DHCP6OptIA_NA].ianaopts)
+                packet1 /= ia_na
+
+            if DHCP6OptIA_TA in packet:
+                ia_ta = DHCP6OptIA_TA(iaid=packet[0][DHCP6OptIA_TA].iaid, iataopts=packet[0][DHCP6OptIA_TA].ianaopts)
+                packet1 /= ia_ta
+
+            if 23 in packet[0][DHCP6OptOptReq].reqopts and dns is not None:
+                dns_server = DHCP6OptDNSServers(dnsservers=[dns])
+                packet1 /= dns_server
+
+            if 24 in packet[0][DHCP6OptOptReq].reqopts and dns_domain is not None:
+                domain = DHCP6OptDNSDomains(dnsdomains=[dns_domain])
+                packet1 /= domain
+
+            sendp(packet1, verbose=False, iface=interface)
+
+            print("+ Received INFO-REQUEST message from host: " + packet[0][1].src + " and MAC: " + packet[0].src)
+            print("+ Sending REPLY message to host: " + packet[0][1].src)
+            if prefix_info is not None and (DHCP6OptIA_NA in packet or DHCP6OptIA_TA in packet):
+                print("         with confirmed address: " + packet1[0][DHCP6OptIAAddress].addr)
+                print("            with valid lifetime: " + str(packet1[0][DHCP6OptIAAddress].validlft))
+                print("        with preferred lifetime: " + str(packet1[0][DHCP6OptIAAddress].preflft))
+            if 23 in packet[0][DHCP6OptOptReq].reqopts and dns is not None:
+                print("                    DNS address: " + str(dns))
+            if 24 in packet[0][DHCP6OptOptReq].reqopts and dns_domain is not None:
+                print("                     DNS domain: " + str(dns_domain))
+            print("-------------------------------------------------------------")
+
+        if DHCP6_Release in packet:
+            dhcp_reply = DHCP6_Reply(trid=packet[0][DHCP6_Release].trid)
+            client_id = DHCP6OptClientId(duid=packet[0][DHCP6OptClientId][1])
+            if duid == "LLT":
+                server_ID = DHCP6OptServerId(duid=DUID_LLT(lladdr=source_mac))
+            if duid == "LL":
+                server_ID = DHCP6OptServerId(duid=DUID_LL(lladdr=source_mac))
+            if duid == "UUID":
+                server_ID = DHCP6OptServerId(duid=DUID_UUID(uuid=uuid.uuid1()))
+
+            packet1 = layer2 / layer3 / layer4 / dhcp_reply / client_id / server_ID
+            if DHCP6OptIA_NA in packet:
+                ia_na = DHCP6OptIA_NA(iaid=packet[0][DHCP6OptIA_NA].iaid, T1=packet[0][DHCP6OptIA_NA].T1,
+                                      T2=packet[0][DHCP6OptIA_NA].T2, ianaopts=packet[0][DHCP6OptIA_NA].ianaopts)
+                packet1 /= ia_na
+
+            if DHCP6OptIA_TA in packet:
+                ia_ta = DHCP6OptIA_TA(iaid=packet[0][DHCP6OptIA_TA].iaid, iataopts=packet[0][DHCP6OptIA_TA].ianaopts)
+                packet1 /= ia_ta
+
+            if 23 in packet[0][DHCP6OptOptReq].reqopts and dns is not None:
+                dns_server = DHCP6OptDNSServers(dnsservers=[dns])
+                packet1 /= dns_server
+
+            if 24 in packet[0][DHCP6OptOptReq].reqopts and dns_domain is not None:
+                domain = DHCP6OptDNSDomains(dnsdomains=[dns_domain])
+                packet1 /= domain
+
+            print("+ Received RELEASE message from host: " + packet[0][1].src + " and MAC: " + packet[0].src)
+            if prefix_info is not None and (DHCP6OptIA_NA in packet or DHCP6OptIA_TA in packet):
+                if packet1[0][DHCP6OptIAAddress].validlft == valid_lftime and packet1[0][DHCP6OptIAAddress].preflft == prefered_lftime:
+                    sendp(packet1, verbose=False, iface=interface)
+                    print("+ Sending REPLY message to host: " + packet[0][1].src)
+
+            if prefix_info is not None and (DHCP6OptIA_NA in packet or DHCP6OptIA_TA in packet):
+                print("         with confirmed address: " + packet1[0][DHCP6OptIAAddress].addr)
+                print("            with valid lifetime: " + str(packet1[0][DHCP6OptIAAddress].validlft))
+                print("        with preferred lifetime: " + str(packet1[0][DHCP6OptIAAddress].preflft))
+            if 23 in packet[0][DHCP6OptOptReq].reqopts and dns is not None:
+                print("                    DNS address: " + str(dns))
+            if 24 in packet[0][DHCP6OptOptReq].reqopts and dns_domain is not None:
                 print("                     DNS domain: " + str(dns_domain))
             print("-------------------------------------------------------------")
 
