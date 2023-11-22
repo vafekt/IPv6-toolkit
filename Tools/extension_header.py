@@ -189,30 +189,31 @@ def generate(interface, type, source_mac, destination_mac, source_ip, destinatio
     if type == "UDP":
         layer4 = UDP(sport=source_port, dport=dest_port)
 
-    for i in range(len(hdr)):
-        if hdr[i][:3] == "hbh" and hdr[i][-1] != '0':
-            hbh_hdr = IPv6ExtHdrHopByHop()
-            for j in range(int(hdr[i][-1])-1):
-                hbh_hdr /= IPv6ExtHdrHopByHop()
-            packet1 /= hbh_hdr
+    if hdr is not None:
+        for i in range(len(hdr)):
+            if hdr[i][:3] == "hbh" and hdr[i][-1] != '0':
+                hbh_hdr = IPv6ExtHdrHopByHop()
+                for j in range(int(hdr[i][-1])-1):
+                    hbh_hdr /= IPv6ExtHdrHopByHop()
+                packet1 /= hbh_hdr
 
-        if hdr[i][:3] == "fra" and hdr[i][-1] != '0':
-            fra_hdr = IPv6ExtHdrFragment(id=12345)
-            for j in range(int(hdr[i][-1])-1):
-                fra_hdr /= IPv6ExtHdrFragment(id=12345)
-            packet1 /= fra_hdr
+            if hdr[i][:3] == "fra" and hdr[i][-1] != '0':
+                fra_hdr = IPv6ExtHdrFragment(id=12345)
+                for j in range(int(hdr[i][-1])-1):
+                    fra_hdr /= IPv6ExtHdrFragment(id=12345)
+                packet1 /= fra_hdr
 
-        if hdr[i][:3] == "des" and hdr[i][-1] != '0':
-            des_hdr = IPv6ExtHdrDestOpt()
-            for j in range(int(hdr[i][-1])-1):
-                des_hdr /= IPv6ExtHdrDestOpt()
-            packet1 /= des_hdr
+            if hdr[i][:3] == "des" and hdr[i][-1] != '0':
+                des_hdr = IPv6ExtHdrDestOpt()
+                for j in range(int(hdr[i][-1])-1):
+                    des_hdr /= IPv6ExtHdrDestOpt()
+                packet1 /= des_hdr
 
-        if hdr[i][:3] == "rou" and hdr[i][-1] != '0':
-            rou_hdr = IPv6ExtHdrRouting()
-            for j in range(int(hdr[i][-1])-1):
-                rou_hdr /= IPv6ExtHdrRouting()
-            packet1 /= rou_hdr
+            if hdr[i][:3] == "rou" and hdr[i][-1] != '0':
+                rou_hdr = IPv6ExtHdrRouting()
+                for j in range(int(hdr[i][-1])-1):
+                    rou_hdr /= IPv6ExtHdrRouting()
+                packet1 /= rou_hdr
 
     if type == "ICMPv6":
         packet1 /= ICMPv6EchoRequest(id=RandShort(), seq=1, data=data)
@@ -222,14 +223,14 @@ def generate(interface, type, source_mac, destination_mac, source_ip, destinatio
     stats = psutil.net_if_stats()
     mtu = stats.get(interface).mtu
     if flood is None:
-        print("Sending packet with Destination Option header to destination: " + destination_ip)
+        print("Sending crafted packet to destination: " + destination_ip)
         if len(packet1) > mtu + 10:
             sendp(fragment6(packet1, mtu), verbose=False, iface=interface)
         else:
             sendp(packet1, verbose=False, iface=interface)
     if flood is not None:
         pkt_list = []
-        print("Flooding the destination: " + destination_ip + "with Destination Option headers messages (press "
+        print("Flooding the destination: " + destination_ip + "with crafted packets (press "
                                                               "Ctrl+C to stop the attack).....")
         if flood == "constant":
             if len(packet1) > mtu + 10:
@@ -253,30 +254,31 @@ def generate(interface, type, source_mac, destination_mac, source_ip, destinatio
                 if type == "UDP":
                     layer4 = UDP(sport=source_port, dport=dest_port)
 
-                for j in range(len(hdr)):
-                    if hdr[i][:3] == "hbh" and hdr[i][-1] != '0':
-                        hbh_hdr = IPv6ExtHdrHopByHop()
-                        for k in range(int(hdr[i][-1]) - 1):
-                            hbh_hdr /= IPv6ExtHdrHopByHop()
-                        packet1 /= hbh_hdr
+                if hdr is not None:
+                    for j in range(len(hdr)):
+                        if hdr[i][:3] == "hbh" and hdr[i][-1] != '0':
+                            hbh_hdr = IPv6ExtHdrHopByHop()
+                            for k in range(int(hdr[i][-1]) - 1):
+                                hbh_hdr /= IPv6ExtHdrHopByHop()
+                            packet1 /= hbh_hdr
 
-                    if hdr[i][:3] == "fra" and hdr[i][-1] != '0':
-                        fra_hdr = IPv6ExtHdrFragment(id=12345)
-                        for k in range(int(hdr[i][-1]) - 1):
-                            fra_hdr /= IPv6ExtHdrFragment(id=12345)
-                        packet1 /= fra_hdr
+                        if hdr[i][:3] == "fra" and hdr[i][-1] != '0':
+                            fra_hdr = IPv6ExtHdrFragment(id=12345)
+                            for k in range(int(hdr[i][-1]) - 1):
+                                fra_hdr /= IPv6ExtHdrFragment(id=12345)
+                            packet1 /= fra_hdr
 
-                    if hdr[i][:3] == "des" and hdr[i][-1] != '0':
-                        des_hdr = IPv6ExtHdrDestOpt()
-                        for k in range(int(hdr[i][-1]) - 1):
-                            des_hdr /= IPv6ExtHdrDestOpt()
-                        packet1 /= des_hdr
+                        if hdr[i][:3] == "des" and hdr[i][-1] != '0':
+                            des_hdr = IPv6ExtHdrDestOpt()
+                            for k in range(int(hdr[i][-1]) - 1):
+                                des_hdr /= IPv6ExtHdrDestOpt()
+                            packet1 /= des_hdr
 
-                    if hdr[i][:3] == "rou" and hdr[i][-1] != '0':
-                        rou_hdr = IPv6ExtHdrRouting()
-                        for k in range(int(hdr[i][-1]) - 1):
-                            rou_hdr /= IPv6ExtHdrRouting()
-                        packet1 /= rou_hdr
+                        if hdr[i][:3] == "rou" and hdr[i][-1] != '0':
+                            rou_hdr = IPv6ExtHdrRouting()
+                            for k in range(int(hdr[i][-1]) - 1):
+                                rou_hdr /= IPv6ExtHdrRouting()
+                            packet1 /= rou_hdr
 
                 if type == "ICMPv6":
                     packet1 /= ICMPv6EchoRequest(id=RandShort(), seq=1, data=data)
